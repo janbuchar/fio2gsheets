@@ -8,6 +8,9 @@ import pytz
 import requests
 
 
+def excel_date(value: date) -> int:
+    return (value - date(1899, 12, 30)).days
+
 @dataclass(frozen=True)
 class Row:
     id: int
@@ -47,7 +50,7 @@ def push_transactions(transactions):
     ids = sheet.col_values(1)
     sheet.clear_basic_filter()
     sheet.append_rows([
-        [str(row.id), format(row.date, "%x"), row.account, row.bank, str(row.amount), row.message, row.comment]
+        [str(row.id), str(excel_date(row.date)), row.account, row.bank, str(row.amount), row.message, row.comment]
         for row in transactions
         if str(row.id) not in ids
     ], value_input_option="USER_ENTERED")
