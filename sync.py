@@ -11,6 +11,7 @@ import requests
 def excel_date(value: date) -> int:
     return (value - date(1899, 12, 30)).days
 
+
 @dataclass(frozen=True)
 class Row:
     id: int
@@ -34,11 +35,14 @@ def read_transactions(transactions):
             comment=row["column25"]["value"] if row["column25"] is not None else "",
         )
 
+
 def fetch_transactions():
-    token = os.environ.get('FIO_TOKEN')
+    token = os.environ.get("FIO_TOKEN")
     to_date = datetime.now(pytz.timezone("Europe/Prague"))
     from_date = to_date - timedelta(days=3000)
-    response = requests.get(f"https://www.fio.cz/ib_api/rest/periods/{token}/{from_date:%Y-%m-%d}/{to_date:%Y-%m-%d}/transactions.json")
+    response = requests.get(
+        f"https://www.fio.cz/ib_api/rest/periods/{token}/{from_date:%Y-%m-%d}/{to_date:%Y-%m-%d}/transactions.json"
+    )
     response.raise_for_status()
     return response.json()
 
@@ -49,12 +53,42 @@ def push_transactions(transactions):
     sheet = doc.worksheet("Data")
     ids = sheet.col_values(1)
     sheet.clear_basic_filter()
-    sheet.append_rows([
-        [str(row.id), str(excel_date(row.date)), row.account, row.bank, str(row.amount), row.message, row.comment]
-        for row in transactions
-        if str(row.id) not in ids
-    ], value_input_option="USER_ENTERED")
-    sheet.set_basic_filter()
+
+    sheet.append_rows(
+        [
+            [
+                str(row.id),
+                str(excel_date(row.date)),
+                row.account,
+                row.bank,
+                str(row.amount),
+                row.message,
+                row.comment,
+            ]
+            for row in transactions
+            if str(row.id) not in ids
+        ],
+        value_input_option="USER_ENTERED",
+    )
+    sheet.format(f"B2:B{sheet.row_count}", {"numberFormat": {"type": "DATE"}})
+
+    # Reconfigure basic filter
+    doc.batch_update(
+        {
+            "requests": [
+                {
+                    "setBasicFilter": {
+                        "filter": {
+                            "range": {"sheetId": sheet.id},
+                            "sortSpecs": [
+                                {"dimensionIndex": 1, "sortOrder": "DESCENDING"}
+                            ],
+                        }
+                    }
+                }
+            ]
+        }
+    )
 
 
 def main():
