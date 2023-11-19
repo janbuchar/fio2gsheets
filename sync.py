@@ -39,7 +39,7 @@ def read_transactions(transactions):
 def fetch_transactions():
     token = os.environ.get("FIO_TOKEN")
     to_date = datetime.now(pytz.timezone("Europe/Prague"))
-    from_date = to_date - timedelta(days=3000)
+    from_date = to_date - timedelta(days=90)
     response = requests.get(
         f"https://www.fio.cz/ib_api/rest/periods/{token}/{from_date:%Y-%m-%d}/{to_date:%Y-%m-%d}/transactions.json"
     )
