@@ -41,7 +41,7 @@ def fetch_transactions():
     to_date = datetime.now(pytz.timezone("Europe/Prague"))
     from_date = to_date - timedelta(days=90)
     response = requests.get(
-        f"https://www.fio.cz/ib_api/rest/periods/{token}/{from_date:%Y-%m-%d}/{to_date:%Y-%m-%d}/transactions.json"
+        f"https://fioapi.fio.cz/ib_api/rest/periods/{token}/{from_date:%Y-%m-%d}/{to_date:%Y-%m-%d}/transactions.json"
     )
     response.raise_for_status()
     return response.json()
